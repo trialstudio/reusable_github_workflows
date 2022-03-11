@@ -1,0 +1,42 @@
+name: Deploy to S3
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: true
+        description: version of release to deploy
+      bucket:
+        type: string
+        required: true
+        description: s3 bucket to deploy app
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_DEFAULT_REGION:
+        required: true
+
+jobs:
+  deploy_to_s3:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          version: "tags/${{ inputs.release_tag }}"
+          file: "output.tar.gz"
+      - run: tar -xzf output.tar.gz
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2.4.24
+          verbose: false
+      - run: |
+          aws s3 cp build/ s3://${{ inputs.bucket }} --recursive --acl public-read
+          aws s3 sync build/ s3://${{ inputs.bucket }} --delete --acl public-read
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}

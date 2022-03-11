@@ -1,0 +1,52 @@
+name: Continuous Delivery
+
+on:
+  workflow_call:
+    inputs:
+      nodejs_version:
+        type: string
+        required: true
+        description: nodejs version to use
+      build_directory:
+        type: string
+        required: true
+        description: output directory of built static files
+    secrets:
+      github_token:
+        type: string
+        required: true
+        description: default github action token
+    outputs:
+      release_tag:
+        value: ${{ jobs.continuous_delivery.outputs.release_tag }}
+        description: tag of created release
+
+jobs:
+  continuous_delivery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ inputs.nodejs_version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ inputs.nodejs_version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test
+      - run: tar -czf output.tar.gz ${{ inputs.build_directory }}
+      - name: Bump version and push tag
+        id: bump_tag
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+      - name: Create release ${{ steps.bump_tag.outputs.new_tag }}
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: ${{ secrets.github_token }}
+          automatic_release_tag: ${{ steps.bump_tag.outputs.new_tag }}
+          prerelease: false
+          files: |
+            output.tar.gz
+    outputs:
+      release_tag: ${{ steps.bump_tag.outputs.new_tag }}
