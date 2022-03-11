@@ -1,4 +1,4 @@
-name: Pull Request Check
+name: Node.js Pull Request Check
 
 on:
   workflow_call:
