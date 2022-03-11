@@ -13,7 +13,6 @@ on:
         description: output directory of built static files
     secrets:
       github_repo_token:
-        type: string
         required: true
         description: default github action token
     outputs:
