@@ -37,13 +37,13 @@ jobs:
         uses: anothrNick/github-tag-action@1.36.0
         env:
           GITHUB_TOKEN: ${{ secrets.github_repo_token }}
-      - run: mv target/${{ inputs.project_name }}*.jar target/${{ inputs.java_version }}.jar
+      - run: mv target/${{ inputs.project_name }}*.jar target/${{ inputs.project_name }}.jar
       - name: Create release ${{ steps.bump_tag.outputs.new_tag }}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: ${{ secrets.github_repo_token }}
           automatic_release_tag: ${{ steps.bump_tag.outputs.new_tag }}
           prerelease: false
-          files: target/${{ inputs.java_version }}.jar
+          files: target/${{ inputs.project_name }}.jar
     outputs:
       release_tag: ${{ steps.bump_tag.outputs.new_tag }}
