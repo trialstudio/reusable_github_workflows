@@ -19,6 +19,4 @@ jobs:
           java-version: ${{ inputs.java_version }}
           distribution: "temurin"
           cache: maven
-      - run: |
-          mvn compile
-          mvn test
+      - run: mvn test
