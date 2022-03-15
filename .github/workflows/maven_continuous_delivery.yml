@@ -1,0 +1,49 @@
+name: Maven Continuous Delivery
+
+on:
+  workflow_call:
+    inputs:
+      java_version:
+        type: string
+        required: true
+        description: java version to use
+      project_name:
+        type: string
+        required: true
+        description: name artifact
+    secrets:
+      github_repo_token:
+        required: true
+        description: default github action token
+    outputs:
+      release_tag:
+        value: ${{ jobs.continuous_delivery.outputs.release_tag }}
+        description: tag of created release
+
+jobs:
+  continuous_delivery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ inputs.java_version }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ inputs.java_version }}
+          distribution: "temurin"
+          cache: maven
+      - run: mvn package
+      - name: Bump version and push tag
+        id: bump_tag
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_repo_token }}
+      - run: mv target/${{ inputs.project_name }}*.jar target/${{ inputs.java_version }}.jar
+      - name: Create release ${{ steps.bump_tag.outputs.new_tag }}
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: ${{ secrets.github_repo_token }}
+          automatic_release_tag: ${{ steps.bump_tag.outputs.new_tag }}
+          prerelease: false
+          files: target/${{ inputs.java_version }}.jar
+    outputs:
+      release_tag: ${{ steps.bump_tag.outputs.new_tag }}

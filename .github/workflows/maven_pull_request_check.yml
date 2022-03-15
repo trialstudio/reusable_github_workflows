@@ -1,0 +1,24 @@
+name: Node.js Pull Request Check
+
+on:
+  workflow_call:
+    inputs:
+      java_version:
+        type: string
+        required: true
+        description: java version to use
+
+jobs:
+  pull_request_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK ${{ inputs.java_version }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ inputs.java_version }}
+          distribution: "temurin"
+          cache: maven
+      - run: |
+          mvn compile
+          mvn test
