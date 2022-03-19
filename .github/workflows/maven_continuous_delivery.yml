@@ -15,6 +15,12 @@ on:
       github_repo_token:
         required: true
         description: default github action token
+      aws_key_id:
+        required: true
+        description: aws access key id
+      aws_secret_key:
+        required: true
+        description: aws secret access key
     outputs:
       release_tag:
         value: ${{ jobs.continuous_delivery.outputs.release_tag }}
@@ -25,25 +31,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up JDK ${{ inputs.java_version }}
         uses: actions/setup-java@v2
         with:
           java-version: ${{ inputs.java_version }}
           distribution: "temurin"
           cache: maven
-      - run: mvn package
+
+      - run: mvn test
+
       - name: Bump version and push tag
         id: bump_tag
         uses: anothrNick/github-tag-action@1.36.0
         env:
           GITHUB_TOKEN: ${{ secrets.github_repo_token }}
-      - run: mv target/${{ inputs.project_name }}*.jar target/${{ inputs.project_name }}.jar
-      - name: Create release ${{ steps.bump_tag.outputs.new_tag }}
-        uses: "marvinpinto/action-automatic-releases@latest"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          repo_token: ${{ secrets.github_repo_token }}
-          automatic_release_tag: ${{ steps.bump_tag.outputs.new_tag }}
-          prerelease: false
-          files: target/${{ inputs.project_name }}.jar
+          aws-access-key-id: ${{ secrets.aws_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_key }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: my-ecr-repo
+          IMAGE_TAG: ${{ steps.bump_tag.outputs.new_tag }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
     outputs:
       release_tag: ${{ steps.bump_tag.outputs.new_tag }}
