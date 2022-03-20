@@ -39,7 +39,7 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      - run: mvn test
+      - run: mvn package
 
       - name: Bump version and push tag
         id: bump_tag
