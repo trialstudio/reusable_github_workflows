@@ -32,7 +32,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.aws_key_id }}
           aws-secret-access-key: ${{ secrets.aws_secret_key }}
-          aws-region: ${{ inputs.region }}
+          aws-region: ${{ inputs.aws_region }}
 
       - name: deploy lambda functon with image
         run: aws lambda update-function-code --function-name ${{ inputs.function_name }} --image-uri ${{ inputs.image }}
