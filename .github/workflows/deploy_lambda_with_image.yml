@@ -1,0 +1,38 @@
+name: Deploy Lambda with Image
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        type: string
+        required: true
+        description: ecr image to use in lambda function
+      aws_region:
+        type: string
+        required: true
+        description: aws region to deploy app
+      function_name:
+        type: string
+        required: true
+        description: name of lambda function to update
+    secrets:
+      aws_key_id:
+        required: true
+        description: aws access key id
+      aws_secret_key:
+        required: true
+        description: aws secret access key
+
+jobs:
+  deploy_lambda:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_key }}
+          aws-region: ${{ inputs.region }}
+
+      - name: deploy lambda functon with image
+        run: aws lambda update-function-code --function-name ${{ inputs.function_name }} --image-uri ${{ inputs.image }}
