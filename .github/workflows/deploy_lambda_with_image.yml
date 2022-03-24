@@ -31,7 +31,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.aws_assume_role }}
-          aws-region: ${{ inputs.aws_region }}
+          aws-region: ${{ secrets.aws_region }}
 
       - name: deploy lambda functon with image
-        run: aws lambda update-function-code --function-name ${{ inputs.function_name }} --image-uri ${{ inputs.image }}
+        run: aws lambda update-function-code --function-name ${{ secrets.function_name }} --image-uri ${{ secrets.image }}
