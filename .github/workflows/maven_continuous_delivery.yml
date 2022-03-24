@@ -15,12 +15,9 @@ on:
       github_repo_token:
         required: true
         description: default github action token
-      aws_key_id:
+      aws_assume_role:
         required: true
-        description: aws access key id
-      aws_secret_key:
-        required: true
-        description: aws secret access key
+        description: aws role to assume
     outputs:
       release_tag:
         value: ${{ jobs.continuous_delivery.outputs.release_tag }}
