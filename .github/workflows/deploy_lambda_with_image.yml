@@ -16,22 +16,21 @@ on:
         required: true
         description: name of lambda function to update
     secrets:
-      aws_key_id:
+      aws_assume_role:
         required: true
-        description: aws access key id
-      aws_secret_key:
-        required: true
-        description: aws secret access key
+        description: aws role to assume
 
 jobs:
   deploy_lambda:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.aws_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_key }}
+          role-to-assume: ${{ secrets.aws_assume_role }}
           aws-region: ${{ inputs.aws_region }}
 
       - name: deploy lambda functon with image
