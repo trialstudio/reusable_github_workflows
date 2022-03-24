@@ -3,22 +3,22 @@ name: Deploy Lambda with Image
 on:
   workflow_call:
     inputs:
-      image:
-        type: string
-        required: true
-        description: ecr image to use in lambda function
       aws_region:
         type: string
         required: true
         description: aws region to deploy app
-      function_name:
-        type: string
-        required: true
-        description: name of lambda function to update
     secrets:
       aws_assume_role:
         required: true
         description: aws role to assume
+      image:
+        type: string
+        required: true
+        description: ecr image to use in lambda function
+      function_name:
+        type: string
+        required: true
+        description: name of lambda function to update
 
 jobs:
   deploy_lambda:
