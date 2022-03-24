@@ -12,11 +12,9 @@ on:
         required: true
         description: aws role to assume
       image:
-        type: string
         required: true
         description: ecr image to use in lambda function
       function_name:
-        type: string
         required: true
         description: name of lambda function to update
 
