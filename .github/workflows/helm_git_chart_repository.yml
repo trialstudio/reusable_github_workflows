@@ -42,7 +42,7 @@ jobs:
             APP=$(echo $DIRECTORY | awk -F/ '{print $--NF}')
 
             helm package $DIRECTORY
-            helm repo index . --url https://${{ inputs.S3_BUCKET }}.s3.${{ inputs.AWS_REGION }}.amazonaws.com/${APP} --merge index.yml
+            helm repo index . --url https://${{ inputs.S3_BUCKET }}.s3.${{ inputs.AWS_REGION }}.amazonaws.com/${APP} --merge index.yaml
 
             aws s3 cp ${APP}*.tgz s3://${{ inputs.S3_BUCKET }}/${APP}/ --acl public-read
 
