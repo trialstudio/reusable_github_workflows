@@ -38,8 +38,11 @@ jobs:
       - name: Package changes, index, and upload artifact to s3
         run: |
           for file in $(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | grep Chart.yaml); do
+            echo $file
             DIRECTORY=$(echo $file | awk -F/ 'BEGIN {OFS="/"} {$NF=""; $0}')
+            echo $DIRECTORY
             APP=$(echo $DIRECTORY | awk -F/ '{print $NF}')
+            echo $APP
 
             helm package $DIRECTORY
             helm repo index . --url https://${{ inputs.S3_BUCKET }}.s3.${{ inputs.AWS_REGION }}.amazonaws.com/${APP} --merge index.yml
