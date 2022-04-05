@@ -52,7 +52,7 @@ jobs:
       - name: Commit updated index
         run: |
           git config --global user.email "github@actions.com"
-          git config --global user.name "github action"
+          git config --global user.name "github-action"
           git add index.yaml
           git commit -m 'updated index.yml with new packages'
           git push
