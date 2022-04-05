@@ -39,7 +39,7 @@ jobs:
         run: |
           for file in $(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | grep Chart.yaml); do
             DIRECTORY=$(echo $file | awk -F/ 'BEGIN {OFS="/"} {$NF=""; print $0}')
-            APP=$(echo $DIRECTORY | awk -F/ '{print $NF}')
+            APP=$(echo $DIRECTORY | awk -F/ '{print $--NF}')
 
             helm package $DIRECTORY
             helm repo index . --url https://${{ inputs.S3_BUCKET }}.s3.${{ inputs.AWS_REGION }}.amazonaws.com/${APP} --merge index.yml
