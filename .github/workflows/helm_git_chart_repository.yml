@@ -31,10 +31,17 @@ jobs:
 
       - name: Package changes, index, and upload artifact to s3
         run: |
+          # install repo to build dependency
+          helm add repo my-repo https://trialstudio.github.io/helm_charts/
+          
           for file in $(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | grep Chart.yaml); do
             DIRECTORY=$(echo $file | awk -F/ 'BEGIN {OFS="/"} {$NF=""; print $0}')
             APP=$(echo $DIRECTORY | awk -F/ '{print $--NF}')
 
+            cd $DIRECTORY
+            helm dependency build
+
+            cd $OLDPWD
             helm package $DIRECTORY
             helm repo index . --url https://s3.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.S3_BUCKET }}/${APP} --merge index.yaml
 
