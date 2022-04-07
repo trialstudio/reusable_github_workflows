@@ -32,7 +32,7 @@ jobs:
       - name: Package changes, index, and upload artifact to s3
         run: |
           # install repo to build dependency
-          helm add repo my-repo https://trialstudio.github.io/helm_charts/
+          helm repo add my-repo https://trialstudio.github.io/helm_charts/
           
           for file in $(git diff --name-only ${{ github.event.before }}..${{ github.event.after }} | grep Chart.yaml); do
             DIRECTORY=$(echo $file | awk -F/ 'BEGIN {OFS="/"} {$NF=""; print $0}')
