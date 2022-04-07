@@ -2,19 +2,13 @@ name: S3-Backed Git Helm Chart Repository
 
 on:
   workflow_call:
-    inputs:
+    secrets:
       AWS_REGION:
-        type: string
         required: true
-        default: us-east-2
-      AWS_ASSUME_ROLE:
-        type: string
-        required: true
-        default: arn:aws:iam::790387652718:role/helm-bucket
       S3_BUCKET:
-        type: string
         required: true
-        default: gg1231
+      AWS_ASSUME_ROLE:
+        required: true
 
 jobs:
   update_chart:
@@ -29,8 +23,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ inputs.AWS_ASSUME_ROLE }}
-          aws-region: ${{ inputs.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ASSUME_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Install helm
         run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
@@ -42,11 +36,9 @@ jobs:
             APP=$(echo $DIRECTORY | awk -F/ '{print $--NF}')
 
             helm package $DIRECTORY
-            helm repo index . --url https://${{ inputs.S3_BUCKET }}.s3.${{ inputs.AWS_REGION }}.amazonaws.com/${APP} --merge index.yaml
+            helm repo index . --url https://${{ secrets.S3_BUCKET }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/${APP} --merge index.yaml
 
-            aws s3 cp ${APP}*.tgz s3://${{ inputs.S3_BUCKET }}/${APP}/ --acl public-read
-
-            rm ${APP}*.tgz
+            aws s3 cp ${APP}*.tgz s3://${{ secrets.S3_BUCKET }}/${APP}/ --acl public-read
           done
 
       - name: Commit updated index
