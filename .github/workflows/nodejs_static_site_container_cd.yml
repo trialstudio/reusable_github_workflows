@@ -1,0 +1,68 @@
+name: Static Site CD
+
+on:
+  workflow_call:
+    inputs:
+      nodejs_version:
+        type: string
+        required: true
+        description: nodejs version to use
+      build_directory:
+        type: string
+        required: true
+        description: output directory of built static files
+    secrets:
+      github_repo_token:
+        required: true
+        description: default github action token
+      aws_assume_role:
+        required: true
+        description: aws role to assume
+    outputs:
+      release_tag:
+        value: ${{ jobs.continuous_delivery.outputs.release_tag }}
+        description: tag of created release
+
+jobs:
+  continuous_delivery:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ inputs.nodejs_version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ inputs.nodejs_version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test
+
+      - name: Bump version and push tag
+        id: bump_tag
+        uses: anothrNick/github-tag-action@1.36.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_repo_token }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.aws_assume_role }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ steps.bump_tag.outputs.tag }}
+        run: |
+          ECR_REPOSITORY=$(echo $GITHUB_REPOSITORY | awk -F/ '{print $NF}')
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    outputs:
+      release_tag: ${{ steps.bump_tag.outputs.new_tag }}
