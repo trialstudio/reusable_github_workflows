@@ -1,0 +1,48 @@
+name: Update Argo App Config Version
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        type: string
+        required: true
+      DEPLOYMENT_TYPE:
+        type: choice
+        required: true
+        options:
+          - static-site
+      APPLICATION_NAME:
+        type: string
+        required: true
+      VERSION:
+        type: string
+        required: true
+        description: Application version which is usually the github tag.
+
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+        description: Token to be used to update argo app repository.
+
+jobs:
+  update_chart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: trialstudio/argo_apps
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update values file version
+        run: |
+          YQ_IN_PLACE_EDIT_PATH='.${{ inputs.DEPLOYMENT_TYPE }}.app.version="${{ inputs.VERSION }}"'
+          VALUES_FILE=${{ inputs.DEPLOYMENT_TYPE }}/${{ APPLICATION_NAME }}/values-${{ inputs.ENVIRONMENT }}.yaml
+          
+          docker run -v `pwd`/${VALUES_FILE}:/values.yaml mikefarah/yq -i '${YQ_IN_PLACE_EDIT_PATH}' /values.yaml
+
+      - name: Commit update
+        run: |
+          git config --global user.email "github@actions.com"
+          git config --global user.name "github-action"
+          git add $VALUES_FILE 
+          git commit -m 'Set ${{ inputs.APPLICATION_NAME }} to ${{ inputs.VERSION }} in ${{ inputs.ENVIRONMENT }}'
+          git push
