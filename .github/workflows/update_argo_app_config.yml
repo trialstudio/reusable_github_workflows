@@ -35,7 +35,7 @@ jobs:
           YQ_IN_PLACE_EDIT_PATH='.${{ inputs.deployment_type }}.app.version="${{ inputs.version }}"'
           VALUES_FILE=${{ inputs.deployment_type }}/${{ inputs.app_name }}/values-${{ inputs.environment }}.yaml
           
-          docker run -v `pwd`/${VALUES_FILE}:/values.yaml mikefarah/yq -i "${YQ_IN_PLACE_EDIT_PATH}" /values.yaml
+          docker run --user `id -u` -v `pwd`/${VALUES_FILE}:/values.yaml mikefarah/yq -i "${YQ_IN_PLACE_EDIT_PATH}" /values.yaml
 
       - name: Commit update
         run: |
