@@ -7,10 +7,8 @@ on:
         type: string
         required: true
       DEPLOYMENT_TYPE:
-        type: choice
+        type: string
         required: true
-        options:
-          - static-site
       APPLICATION_NAME:
         type: string
         required: true
